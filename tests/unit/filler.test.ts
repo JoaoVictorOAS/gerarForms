@@ -120,4 +120,60 @@ describe('DOM Form Filler (Milestone 5)', () => {
     expect(res.success).toBe(false);
     expect(res.skippedFields).toContain('campo_inexistente');
   });
+
+  it('accepts a direct HTMLElement as target without throwing startsWith error', () => {
+    const formEl = document.getElementById('test-form') as HTMLElement;
+    expect(formEl).toBeDefined();
+
+    // Passing HTMLElement directly as target
+    const res = injectRecordIntoDom({
+      nome: 'Carlos Eduardo',
+      email: 'carlos@example.com',
+    }, formEl, document);
+
+    expect(res.success).toBe(true);
+    expect((document.getElementById('nome') as HTMLInputElement).value).toBe('Carlos Eduardo');
+    expect((document.getElementById('email') as HTMLInputElement).value).toBe('carlos@example.com');
+  });
+
+  it('handles forms with an input named "id" without crashing from form.id shadowing', () => {
+    const customDom = new JSDOM(`
+      <form id="shadow-form">
+        <input type="text" name="id" value="123" />
+        <input type="text" name="username" />
+      </form>
+    `);
+    const customDoc = customDom.window.document;
+    const form = customDoc.getElementById('shadow-form') as HTMLFormElement;
+
+    // Passing form directly or an element as target must never throw startsWith error
+    const res = injectRecordIntoDom({
+      username: 'johndoe',
+    }, form, customDoc);
+
+    expect(res.success).toBe(true);
+    expect((customDoc.querySelector('[name="username"]') as HTMLInputElement).value).toBe('johndoe');
+
+    // Also test passing an input element directly as target
+    const inputEl = customDoc.querySelector('[name="id"]') as HTMLElement;
+    const resEl = injectRecordIntoDom({
+      username: 'janedoe',
+    }, inputEl, customDoc);
+    expect(resEl.success).toBe(true);
+    expect((customDoc.querySelector('[name="username"]') as HTMLInputElement).value).toBe('janedoe');
+  });
+
+  it('gracefully handles non-string or invalid target parameters without throwing', () => {
+    // Number target
+    const resNum = injectRecordIntoDom({ nome: 'Teste' }, 123 as any, document);
+    expect(resNum.success).toBe(true);
+
+    // Object target (not an HTMLElement)
+    const resObj = injectRecordIntoDom({ nome: 'Teste 2' }, { invalid: true } as any, document);
+    expect(resObj.success).toBe(true);
+
+    // Malformed CSS selector
+    const resBadSel = injectRecordIntoDom({ nome: 'Teste 3' }, '###invalid selector[[[', document);
+    expect(resBadSel.success).toBe(true);
+  });
 });

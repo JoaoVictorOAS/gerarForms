@@ -1,6 +1,7 @@
 /**
  * FormGen Background Service Worker
- * Coordinates runtime messaging, AI API proxying, and persistent queue routing.
+ * Coordinates runtime messaging, AI API proxying, persistent queue routing,
+ * and context menu interactions.
  * Path: src/background/index.ts
  */
 
@@ -9,11 +10,16 @@ import {
   ExtensionResponse,
   GenerateDataRequest,
   GenerateDataResponse,
+  ScanDomResponse,
+  InjectRecordResponse,
+  FormRecord,
+  FormGenQueueState,
 } from '../shared/types';
 import {
   getActiveQueue,
   advanceActiveQueue,
   clearActiveQueue,
+  saveActiveQueue,
   getActiveProviderConfig,
 } from '../shared/storage';
 import { generateFormData } from '../shared/ai';
@@ -48,6 +54,318 @@ if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage?.addListener) {
       return true;
     }
   );
+}
+
+/**
+ * Configures Chrome Context Menus for FormGen.
+ * Submenu hierarchy:
+ *   - FormGen
+ *     - Criar registros ▶
+ *       - 1 registro (preencher agora)
+ *       - Lote com 10 registros
+ *       - Lote com 100 registros
+ *     - [separator]
+ *     - Inserir próximo registro da fila
+ *     - Descartar fila ativa
+ */
+export function setupContextMenus(): void {
+  if (typeof chrome === 'undefined' || !chrome.contextMenus?.create) return;
+
+  chrome.contextMenus.removeAll(() => {
+    // 1. Root Menu
+    chrome.contextMenus.create({
+      id: 'formgen_root',
+      title: 'FormGen',
+      contexts: ['all'],
+    });
+
+    // 2. Submenu: Criar registros
+    chrome.contextMenus.create({
+      id: 'formgen_create_menu',
+      parentId: 'formgen_root',
+      title: 'Criar registros',
+      contexts: ['all'],
+    });
+
+    chrome.contextMenus.create({
+      id: 'formgen_create_1',
+      parentId: 'formgen_create_menu',
+      title: '1 registro (preencher agora)',
+      contexts: ['all'],
+    });
+
+    chrome.contextMenus.create({
+      id: 'formgen_create_10',
+      parentId: 'formgen_create_menu',
+      title: 'Lote com 10 registros',
+      contexts: ['all'],
+    });
+
+    chrome.contextMenus.create({
+      id: 'formgen_create_100',
+      parentId: 'formgen_create_menu',
+      title: 'Lote com 100 registros',
+      contexts: ['all'],
+    });
+
+    // Separator
+    chrome.contextMenus.create({
+      id: 'formgen_sep_1',
+      parentId: 'formgen_root',
+      type: 'separator',
+      contexts: ['all'],
+    });
+
+    // 3. Inserir próximo registro da fila
+    chrome.contextMenus.create({
+      id: 'formgen_inject_next',
+      parentId: 'formgen_root',
+      title: 'Inserir próximo registro da fila',
+      contexts: ['all'],
+    });
+
+    // 4. Descartar fila ativa
+    chrome.contextMenus.create({
+      id: 'formgen_discard_queue',
+      parentId: 'formgen_root',
+      title: 'Descartar fila ativa',
+      contexts: ['all'],
+    });
+  });
+}
+
+/**
+ * Handles clicks on FormGen context menu items.
+ * Exported for testing.
+ */
+export async function handleContextMenuClick(
+  info: chrome.contextMenus.OnClickData,
+  tab?: chrome.tabs.Tab
+): Promise<void> {
+  const tabId = tab?.id;
+  if (!tabId) return;
+
+  const menuItemId = String(info.menuItemId);
+
+  const notifyTab = async (
+    message: string,
+    type: 'info' | 'success' | 'warning' | 'error' = 'info'
+  ) => {
+    try {
+      await chrome.tabs.sendMessage(tabId, {
+        action: 'SHOW_TOAST',
+        message,
+        type,
+      });
+    } catch {
+      // Content script may not be loaded yet
+    }
+  };
+
+  const ensureContentScript = async () => {
+    try {
+      await chrome.tabs.sendMessage(tabId, { action: 'PING' });
+    } catch {
+      if (typeof chrome !== 'undefined' && chrome.scripting?.executeScript) {
+        try {
+          await chrome.scripting.executeScript({
+            target: { tabId },
+            files: ['content.js'],
+          });
+        } catch {
+          // Ignore if permission denied or chrome:// URL
+        }
+      }
+    }
+  };
+
+  if (
+    menuItemId === 'formgen_create_1' ||
+    menuItemId === 'formgen_create_10' ||
+    menuItemId === 'formgen_create_100'
+  ) {
+    const count: 1 | 10 | 100 =
+      menuItemId === 'formgen_create_1'
+        ? 1
+        : menuItemId === 'formgen_create_10'
+        ? 10
+        : 100;
+
+    await ensureContentScript();
+    await notifyTab(`FormGen: Inspecionando formulário para gerar ${count} registro(s)...`, 'info');
+
+    // 1. Scan form targeted by right-click
+    let scanRes: ScanDomResponse;
+    try {
+      scanRes = (await chrome.tabs.sendMessage(tabId, {
+        action: 'SCAN_DOM',
+        fromContextMenu: true,
+      })) as ScanDomResponse;
+    } catch (err) {
+      await notifyTab('FormGen: Não foi possível inspecionar a página. Recarregue a aba.', 'error');
+      return;
+    }
+
+    if (
+      !scanRes ||
+      !scanRes.success ||
+      !scanRes.schema ||
+      !Array.isArray(scanRes.schema.fields) ||
+      scanRes.schema.fields.length === 0
+    ) {
+      await notifyTab('FormGen: Nenhum campo de formulário detectado no elemento clicado.', 'warning');
+      return;
+    }
+
+    const schema = scanRes.schema;
+
+    // 2. Load provider credentials
+    const { provider, config, defaults } = await getActiveProviderConfig();
+    if (provider !== 'ollama' && !config.apiKey?.trim()) {
+      await notifyTab(
+        `FormGen: Chave de API não configurada para ${provider}. Abra as opções da extensão.`,
+        'error'
+      );
+      return;
+    }
+
+    await notifyTab(`FormGen: Gerando ${count} registro(s) com ${provider}...`, 'info');
+
+    // 3. Generate structured data with AI
+    let records: FormRecord[];
+    try {
+      records = await generateFormData({
+        provider,
+        config,
+        defaults,
+        schema,
+        count,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      await notifyTab(`FormGen: Falha na IA: ${msg}`, 'error');
+      return;
+    }
+
+    if (!records || records.length === 0) {
+      await notifyTab('FormGen: Nenhum dado retornado pela IA.', 'error');
+      return;
+    }
+
+    // 4. Inject record #1
+    const firstRecord = records[0];
+    const injectRes = (await chrome.tabs.sendMessage(tabId, {
+      action: 'INJECT_RECORD',
+      record: firstRecord,
+      formId: schema.formId,
+      fromContextMenu: true,
+    })) as InjectRecordResponse;
+
+    const fieldsCount =
+      injectRes?.injectedFields?.length || (firstRecord ? Object.keys(firstRecord).length : 0);
+
+    // 5. Handle queue if batch
+    if (count > 1) {
+      const pendingRecords = records.slice(1);
+      const now = Date.now();
+      const queueState: FormGenQueueState = {
+        queueId: `queue_${now}`,
+        tabId,
+        url: tab.url || '',
+        formId: schema.formId || 'form',
+        totalRecords: count,
+        currentIndex: 2,
+        pendingRecords,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      await saveActiveQueue(queueState);
+      await notifyTab(
+        `FormGen: Registro #1 preenchido (${fieldsCount} campos)! Fila criada com ${pendingRecords.length} registros restantes.`,
+        'success'
+      );
+    } else {
+      await notifyTab(
+        `FormGen: Formulário preenchido com sucesso (${fieldsCount} campos)!`,
+        'success'
+      );
+    }
+    return;
+  }
+
+  if (menuItemId === 'formgen_inject_next') {
+    await ensureContentScript();
+    const queue = await getActiveQueue();
+
+    if (!queue || !queue.pendingRecords || queue.pendingRecords.length === 0) {
+      await notifyTab('FormGen: Nenhuma fila de registros ativa.', 'warning');
+      return;
+    }
+
+    const result = await advanceActiveQueue();
+    if (!result || !result.record) {
+      await notifyTab('FormGen: Fila concluída!', 'info');
+      return;
+    }
+
+    const injectRes = (await chrome.tabs.sendMessage(tabId, {
+      action: 'INJECT_RECORD',
+      record: result.record,
+      formId: queue.formId,
+      fromContextMenu: true,
+    })) as InjectRecordResponse;
+
+    const fieldsCount =
+      injectRes?.injectedFields?.length || Object.keys(result.record).length;
+
+    if (result.isFinished) {
+      await notifyTab(
+        `FormGen: Registro final [${result.currentIndex}/${result.totalRecords}] inserido (${fieldsCount} campos)! Fila concluída.`,
+        'success'
+      );
+    } else {
+      await notifyTab(
+        `FormGen: Registro [${result.currentIndex}/${result.totalRecords}] inserido (${fieldsCount} campos)! Restam ${result.remainingCount}.`,
+        'success'
+      );
+    }
+    return;
+  }
+
+  if (menuItemId === 'formgen_discard_queue') {
+    await clearActiveQueue();
+    await notifyTab('FormGen: Fila de registros descartada com sucesso.', 'info');
+    return;
+  }
+}
+
+/**
+ * Context menu listeners registration in Chrome MV3.
+ */
+if (typeof chrome !== 'undefined') {
+  if (chrome.runtime?.onInstalled?.addListener) {
+    chrome.runtime.onInstalled.addListener(() => {
+      setupContextMenus();
+    });
+  }
+
+  if (chrome.runtime?.onStartup?.addListener) {
+    chrome.runtime.onStartup.addListener(() => {
+      setupContextMenus();
+    });
+  }
+
+  if (chrome.contextMenus?.onClicked?.addListener) {
+    chrome.contextMenus.onClicked.addListener((info, tab) => {
+      handleContextMenuClick(info, tab).catch((err) => {
+        console.error('[FormGen SW] Context menu execution error:', err);
+      });
+    });
+  }
+
+  // Setup context menus immediately on evaluation
+  setupContextMenus();
 }
 
 /**

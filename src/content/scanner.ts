@@ -1090,13 +1090,20 @@ export function scanDocument(options: ScanOptions = {}): FormSchema {
   }
 
   // 6. Form metadata resolution
+  let resolvedId = '';
+  if (typeof container.getAttribute === 'function') {
+    resolvedId = container.getAttribute('id') || '';
+  } else if (typeof container.id === 'string') {
+    resolvedId = container.id;
+  }
+
   const formId =
-    container.id ||
+    resolvedId ||
     (typeof options.target === 'string'
       ? options.target.replace(/^#/, '')
       : 'form_active');
 
-  const formSelector = container.id ? `#${container.id}` : undefined;
+  const formSelector = resolvedId ? `#${resolvedId}` : undefined;
 
   const schema: FormSchema = {
     formId,

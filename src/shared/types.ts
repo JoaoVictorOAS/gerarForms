@@ -354,6 +354,9 @@ export interface FormGenQueueState {
 // --- 4.1 SCAN_DOM Message Contract ---
 export interface ScanDomRequest {
   action: 'SCAN_DOM';
+  formId?: string;
+  formSelector?: string;
+  fromContextMenu?: boolean;
 }
 
 export interface ScanDomResponse {
@@ -367,6 +370,7 @@ export interface InjectRecordRequest {
   action: 'INJECT_RECORD';
   record: FormRecord;
   formId?: string;
+  fromContextMenu?: boolean;
 }
 
 export interface InjectRecordResponse {
@@ -456,6 +460,18 @@ export interface PingResponse {
   error?: string;
 }
 
+// --- 4.9 SHOW_TOAST Message Contract ---
+export interface ShowToastRequest {
+  action: 'SHOW_TOAST';
+  message: string;
+  type?: 'info' | 'success' | 'warning' | 'error';
+}
+
+export interface ShowToastResponse {
+  success: boolean;
+  error?: string;
+}
+
 /**
  * Union of all extension message requests.
  */
@@ -467,7 +483,8 @@ export type ExtensionMessage =
   | GetQueueStateRequest
   | AdvanceQueueRequest
   | DiscardQueueRequest
-  | PingRequest;
+  | PingRequest
+  | ShowToastRequest;
 
 /**
  * Union of all extension message responses.
@@ -480,7 +497,8 @@ export type ExtensionResponse =
   | GetQueueStateResponse
   | AdvanceQueueResponse
   | DiscardQueueResponse
-  | PingResponse;
+  | PingResponse
+  | ShowToastResponse;
 
 /**
  * Generic API response wrapper.

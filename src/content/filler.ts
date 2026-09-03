@@ -252,12 +252,12 @@ export function injectElementValue(
  * Injects an entire FormRecord into the active DOM document or form.
  *
  * @param record FormRecord object with field keys mapped to mock values
- * @param target Optional form selector or ID
+ * @param target Optional form selector, form ID, or direct HTMLElement container
  * @param rootDoc Optional Document reference for headless testing
  */
 export function injectRecordIntoDom(
   record: FormRecord,
-  target?: string,
+  target?: string | HTMLElement,
   rootDoc?: Document
 ): InjectRecordResult {
   const doc = rootDoc || (typeof document !== 'undefined' ? document : null);
@@ -274,12 +274,33 @@ export function injectRecordIntoDom(
 
   let container: HTMLElement | Document = doc;
   if (target) {
-    const selector = target.startsWith('#') || target.includes(' ') || target.includes('.')
-      ? target
-      : `#${target}`;
-    const found = doc.querySelector<HTMLElement>(selector);
-    if (found) {
-      container = found;
+    if (typeof target === 'string') {
+      const trimmed = target.trim();
+      if (trimmed) {
+        const selector =
+          trimmed.startsWith('#') ||
+          trimmed.includes(' ') ||
+          trimmed.includes('.') ||
+          trimmed.includes('[')
+            ? trimmed
+            : `#${trimmed}`;
+        try {
+          const found = doc.querySelector<HTMLElement>(selector);
+          if (found) {
+            container = found;
+          }
+        } catch {
+          // If selector was an invalid CSS selector, gracefully keep doc as container
+        }
+      }
+    } else if (
+      typeof target === 'object' &&
+      target !== null &&
+      'nodeType' in target &&
+      (target as Node).nodeType === 1
+    ) {
+      const el = target as HTMLElement;
+      container = (typeof el.closest === 'function' ? el.closest('form') : null) || el;
     }
   }
 

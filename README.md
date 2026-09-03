@@ -2,7 +2,7 @@
 
 [![Manifest V3](https://img.shields.io/badge/Chrome-Manifest%20V3-blue?logo=googlechrome&logoColor=white)](manifest.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript&logoColor=white)](tsconfig.json)
-[![Vitest](https://img.shields.io/badge/Vitest-208%20Passando%20(100%25)-success?logo=vitest&logoColor=white)](package.json)
+[![Vitest](https://img.shields.io/badge/Vitest-215%20Passando%20(100%25)-success?logo=vitest&logoColor=white)](package.json)
 [![Suite de Testes E2E](https://img.shields.io/badge/Testes%20E2E-69%20Passando%20(100%25)-success?logo=googlechrome&logoColor=white)](tests/e2e/test-runner.mjs)
 [![Licença: MIT](https://img.shields.io/badge/Licen%C3%A7a-MIT-yellow.svg)](package.json)
 
@@ -23,6 +23,7 @@ O FormGen suporta tanto o preenchimento instantâneo de um único registro quant
 - [Como Usar](#como-usar)
   - [Preenchimento Individual (1 Registro)](#preenchimento-individual-1-registro)
   - [Geração em Lote com Fila (10 ou 100 Registros)](#geração-em-lote-com-fila-10-ou-100-registros)
+  - [Menu de Contexto no Botão Direito](#menu-de-contexto-no-botão-direito)
   - [Descartando uma Fila Ativa](#descartando-uma-fila-ativa)
 - [Pipeline de Build & Desenvolvimento](#pipeline-de-build--desenvolvimento)
 - [Testes & Garantia de Qualidade](#testes--garantia-de-qualidade)
@@ -71,6 +72,16 @@ O FormGen suporta tanto o preenchimento instantâneo de um único registro quant
 - **Bypass de Setters Nativos**: Contorna as barreiras de estados controlados do React 16 a 19, Vue, Angular e Svelte invocando diretamente os descritores de propriedades nativas (`HTMLInputElement.prototype.value.set.call(el, val)`) e resetando os rastreadores internos de valor (`_valueTracker`).
 - **Disparo Canônico de Eventos**: Simula com fidelidade o ciclo de interação humana disparando eventos com propagação (*bubbling* e *composed*): `focus` → atribuição do valor via setter → `input` → `change` → `blur`.
 - **Compatibilidade Ampla de Controles**: Manipula `text`, `email`, `number`, `tel`, `date`, seletores `<select>` simples e múltiplos, botões de rádio, caixas de seleção (*checkboxes*) e `<textarea>` multilinhas (preservando quebras de linha `\n`).
+
+### 🖱️ Menu de Contexto no Botão Direito & Notificações na Página
+- **Acesso Rápido com o Botão Direito**: Clique com o botão direito em qualquer formulário ou campo de input para abrir o submenu nativo do FormGen:
+  - **Criar registros ▶**:
+    - `1 registro (preencher agora)`: Inspeciona e preenche imediatamente o formulário clicado.
+    - `Lote com 10 registros`: Gera 10 registros, insere o #1 e armazena os 9 restantes na fila.
+    - `Lote com 100 registros`: Gera 100 registros com particionamento em lotes.
+  - **Inserir próximo registro da fila**: Avança a fila ativa e preenche o próximo registro no formulário.
+  - **Descartar fila ativa**: Remove a fila atual do armazenamento do navegador.
+- **Notificações Flutuantes (Toasts)**: Feedback visual discreto e animado exibido diretamente na página web para acompanhar o status da geração e injeção sem precisar abrir o popup.
 
 ---
 
@@ -277,6 +288,17 @@ Antes de gerar os primeiros dados sintéticos, configure o provedor de IA deseja
 5. Submeta ou limpe o formulário na página web conforme o seu fluxo de testes.
 6. Reabra o popup do FormGen: o botão principal exibirá dinamicamente **`Inserir registro [2/10]`**.
 7. Ao clicar no botão, o registro #2 é injetado e o botão avança automaticamente para **`Inserir registro [3/10]`**, repetindo o processo até o esgotamento do lote.
+
+### Menu de Contexto no Botão Direito
+Além da interface do popup, você pode controlar o FormGen com agilidade usando o botão direito do mouse diretamente sobre a página:
+1. Clique com o botão direito em qualquer campo de entrada ou dentro de um formulário.
+2. Posicione o cursor sobre o menu **FormGen**:
+   - **Criar registros ▶**:
+     - Selecione **`1 registro (preencher agora)`** para gerar e preencher o formulário imediatamente.
+     - Selecione **`Lote com 10 registros`** ou **`Lote com 100 registros`** para preencher o primeiro e enfileirar os restantes.
+   - Selecione **`Inserir próximo registro da fila`** para avançar e preencher o próximo registro salvo na fila.
+   - Selecione **`Descartar fila ativa`** para limpar a fila a qualquer momento.
+3. Uma notificação flutuante (*toast*) no canto inferior da página confirma o progresso em tempo real.
 
 ### Descartando uma Fila Ativa
 - Se desejar cancelar uma fila de lote antes de preencher todos os registros, clique no botão secundário **Descartar fila** no popup. A fila armazenada será purgada e a interface voltará ao estado inicial ocioso.

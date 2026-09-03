@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FormGen E2E Test Fixture & Reactive Harness</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+    }
+    header h1 { font-size: 24px; font-weight: 700; color: #1e293b; }
+    header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .card h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      color: #334155;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-group.row {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.15s ease;
+      background-color: #ffffff;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    fieldset {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+    legend {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 6px;
+      color: #334155;
+    }
+    .radio-group, .checkbox-group {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .radio-item, .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .state-mirror {
+      margin-top: 16px;
+      padding: 12px;
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      max-height: 220px;
+    }
+    .state-mirror h3 {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    /* Console & Event Table */
+    .console-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    button {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: var(--primary-hover); }
+    button.btn-secondary {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    button.btn-secondary:hover { background: #cbd5e1; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .badge-input { background: #dbeafe; color: #1e40af; }
+    .badge-change { background: #dcfce7; color: #166534; }
+    .badge-focus { background: #fef9c3; color: #854d0e; }
+    .badge-blur { background: #f1f5f9; color: #475569; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    th, td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: #475569;
+    }
+    tr:hover td { background: #f8fafc; }
+    .table-container {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    /* Honeypot utility styles */
+    .visually-hidden-honeypot {
+      position: absolute !important;
+      left: -9999px !important;
+      top: -9999px !important;
+      width: 1px !important;
+      height: 1px !important;
+      overflow: hidden !important;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>FormGen Standalone Test Fixture & Reactive Harness</h1>
+    <p>Opaque-box verification target for DOM Scanner (R1), Multi-Provider AI (R2), Queue Manager (R3), Injector (R4), and Verification Suite (R5).</p>
+  </header>
+
+  <main class="grid-container">
+
+    <!-- PANEL 1: CANONICAL ENTERPRISE FORM -->
+    <section class="card" id="panel-enterprise">
+      <h2>1. Canonical Enterprise Form (#form-enterprise)</h2>
+      <form id="form-enterprise" novalidate>
+        
+        <div class="form-group">
+          <label for="ent-fullname">Nome Completo *</label>
+          <input type="text" id="ent-fullname" name="fullname" required minlength="3" maxlength="50" autocomplete="name" placeholder="Nome completo do colaborador">
+          <span class="hint">Min 3, Max 50 caracteres (Required)</span>
+        </div>
+
+        <div class="form-group">
+          <label for="ent-email">E-mail Corporativo *</label>
+          <input type="email" id="ent-email" name="email" required autocomplete="email" placeholder="colaborador@empresa.com.br">
+          <span class="hint">E-mail corporativo válido (Required)</span>
+        </div>
+
+        <div class="form-group">
+          <label for="ent-age">Idade *</label>
+          <input type="number" id="ent-age" name="age" required min="18" max="120" step="1" placeholder="Ex: 30">
+          <span class="hint">Min: 18, Max: 120, Step: 1 (Required)</span>
+        </div>
+
+        <div class="form-group">
+          <label for="ent-phone">Telefone Comercial</label>
+          <input type="tel" id="ent-phone" name="phone" pattern="\(\d{2}\) \d{4,5}-\d{4}" placeholder="(11) 98765-4321">
+          <span class="hint">Formato: (DD) 9XXXX-XXXX</span>
+        </div>
+
+        <div class="form-group">
+          <label for="ent-birthdate">Data de Nascimento</label>
+          <input type="date" id="ent-birthdate" name="birthdate" min="1950-01-01" max="2026-12-31">
+          <span class="hint">Intervalo: 1950 a 2026</span>
+        </div>
+
+        <div class="form-group">
+          <label for="ent-state">Estado (UF) *</label>
+          <select id="ent-state" name="state" required>
+            <option value="">Selecione um Estado...</option>
+            <option value="SP">São Paulo (SP)</option>
+            <option value="RJ">Rio de Janeiro (RJ)</option>
+            <option value="MG">Minas Gerais (MG)</option>
+            <option value="RS">Rio Grande do Sul (RS)</option>
+            <option value="PR">Paraná (PR)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="ent-skills">Habilidades Técnicas (Múltiplas)</label>
+          <select id="ent-skills" name="skills" multiple size="4">
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="python">Python</option>
+            <option value="rust">Rust</option>
+            <option value="go">Go</option>
+          </select>
+        </div>
+
+        <fieldset>
+          <legend>Tipo de Contrato *</legend>
+          <div class="radio-group">
+            <label class="radio-item">
+              <input type="radio" id="ent-contract-clt" name="ent-contract" value="clt" required>
+              CLT Efetivo
+            </label>
+            <label class="radio-item">
+              <input type="radio" id="ent-contract-pj" name="ent-contract" value="pj">
+              Pessoa Jurídica (PJ)
+            </label>
+            <label class="radio-item">
+              <input type="radio" id="ent-contract-est" name="ent-contract" value="estagio">
+              Estágio
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="form-group row">
+          <input type="checkbox" id="ent-newsletter" name="newsletter" value="1">
+          <label for="ent-newsletter">Desejo receber boletim técnico quinzenal</label>
+        </div>
+
+        <div class="form-group row">
+          <input type="checkbox" id="ent-terms" name="terms" value="accepted" required>
+          <label for="ent-terms">Declaro que li e concordo com os Termos de Uso *</label>
+        </div>
+
+        <div class="form-group">
+          <label for="ent-bio">Biografia Resumida</label>
+          <textarea id="ent-bio" name="bio" rows="3" maxlength="500" placeholder="Fale brevemente sobre sua formação e objetivos..."></textarea>
+          <span class="hint">Máximo 500 caracteres</span>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+          <button type="submit" id="btn-submit-enterprise">Submeter Formulário</button>
+          <button type="reset" class="btn-secondary" id="btn-reset-enterprise">Limpar Campos</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- PANEL 2: REACTIVE STATE SIMULATOR -->
+    <section class="card" id="panel-reactive">
+      <h2>2. Reactive State Simulator (#form-reactive)</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+        Emula componentes controlados (React/Vue). O estado abaixo só atualiza se os eventos sintéticos <code>input</code>/<code>change</code> dispararem com bypass do prototype setter.
+      </p>
+
+      <form id="form-reactive" novalidate>
+        <div class="form-group">
+          <label for="reactive-name">Nome do Usuário Reativo</label>
+          <input type="text" id="reactive-name" name="reactiveName" placeholder="Nome reativo">
+        </div>
+
+        <div class="form-group">
+          <label for="reactive-email">E-mail Reativo</label>
+          <input type="email" id="reactive-email" name="reactiveEmail" placeholder="email@reativo.com">
+        </div>
+
+        <div class="form-group">
+          <label for="reactive-role">Perfil de Acesso</label>
+          <select id="reactive-role" name="reactiveRole">
+            <option value="">Selecione...</option>
+            <option value="admin">Administrador</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Visualizador</option>
+          </select>
+        </div>
+
+        <div class="form-group row">
+          <input type="checkbox" id="reactive-terms" name="reactiveTerms">
+          <label for="reactive-terms">Ativar Modo Reativo Conectado</label>
+        </div>
+
+        <div class="form-group">
+          <label for="reactive-notes">Notas de Observação</label>
+          <textarea id="reactive-notes" name="reactiveNotes" rows="2" placeholder="Notas gravadas no estado"></textarea>
+        </div>
+      </form>
+
+      <div class="state-mirror">
+        <h3>__REACTIVE_STATE__ Mirror (Internal Component State)</h3>
+        <pre id="reactive-state-output">{}</pre>
+      </div>
+    </section>
+
+    <!-- PANEL 3: EDGE CASES & ADVERSARIAL HONEYPOTS -->
+    <section class="card" id="panel-edge-cases">
+      <h2>3. Edge Cases & Honeypots (#form-edge-cases)</h2>
+      <form id="form-edge-cases" novalidate>
+        
+        <!-- Tier 1: Explicit label[for] -->
+        <div class="form-group">
+          <label for="edge-tier1-id">Tier 1: Explicit Label For</label>
+          <input type="text" id="edge-tier1-id" name="tier1_field">
+        </div>
+
+        <!-- Tier 2: Nested wrapping label -->
+        <div class="form-group">
+          <label>
+            Tier 2: Nested Wrapping Label Text
+            <input type="text" id="edge-tier2-id" name="tier2_field">
+          </label>
+        </div>
+
+        <!-- Tier 3: aria-labelledby -->
+        <div class="form-group">
+          <span id="ref-span-part1" style="font-weight: 600; font-size: 13px;">Tier 3 Compound</span>
+          <span id="ref-span-part2" style="font-weight: 600; font-size: 13px; color: var(--primary);">Aria LabelledBy</span>
+          <input type="text" id="edge-tier3-id" name="tier3_field" aria-labelledby="ref-span-part1 ref-span-part2">
+        </div>
+
+        <!-- Tier 4: aria-label -->
+        <div class="form-group">
+          <input type="text" id="edge-tier4-id" name="tier4_field" aria-label="Tier 4 Accessible Name">
+        </div>
+
+        <!-- Tier 5: Fieldset Legend -->
+        <fieldset>
+          <legend>Tier 5: Ancestor Fieldset Legend</legend>
+          <input type="text" id="edge-tier5-id" name="tier5_field" placeholder="Inside fieldset without label">
+          <div class="radio-group" style="margin-top: 8px;">
+            <label class="radio-item">
+              <input type="radio" id="edge-tier5-opt1" name="tier5_radio" value="opt1"> Opção 1
+            </label>
+            <label class="radio-item">
+              <input type="radio" id="edge-tier5-opt2" name="tier5_radio" value="opt2"> Opção 2
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Tier 6: Proximity Sibling -->
+        <div class="form-group">
+          <span>Tier 6: Sibling Span Label</span>
+          <input type="text" id="edge-tier6-id" name="tier6_field">
+        </div>
+
+        <!-- Tier 7: Attribute Fallback (placeholder/name) -->
+        <div class="form-group">
+          <input type="text" id="edge-tier7-id" name="user_postal_code" placeholder="Tier 7: Placeholder Postal Code">
+        </div>
+
+        <!-- ADVERSARIAL TRAP 1: Honeypot Offscreen -->
+        <input type="text" id="honeypot-offscreen" name="trap_offscreen_url" class="visually-hidden-honeypot" tabindex="-1" autocomplete="off">
+
+        <!-- ADVERSARIAL TRAP 2: Honeypot Display None -->
+        <input type="text" id="honeypot-hidden" name="trap_display_none" style="display: none;" tabindex="-1">
+
+        <!-- ADVERSARIAL TRAP 3: Zero Dimension & Opacity -->
+        <input type="text" id="honeypot-zero" name="trap_zero_dimension" style="width: 0px; height: 0px; opacity: 0; pointer-events: none; border: 0;" tabindex="-1">
+
+        <!-- ADVERSARIAL TRAP 4: Hidden CSRF Token -->
+        <input type="hidden" id="csrf-token" name="csrf_token" value="sec_tok_9941a87b3e">
+
+        <!-- DISABLED INPUT -->
+        <div class="form-group">
+          <label for="edge-disabled">Campo Desabilitado (Must be excluded from fillable schema)</label>
+          <input type="text" id="edge-disabled" name="disabled_control" disabled value="VALOR_DESABILITADO_INALTERAVEL">
+        </div>
+
+        <!-- READONLY INPUT -->
+        <div class="form-group">
+          <label for="edge-readonly">Campo Somente Leitura (Must not be modified)</label>
+          <input type="text" id="edge-readonly" name="readonly_control" readonly value="ID_SISTEMA_SOMENTE_LEITURA">
+        </div>
+
+        <!-- FILE INPUT (Excluded) -->
+        <div class="form-group">
+          <label for="edge-file">Upload de Arquivo (Excluded)</label>
+          <input type="file" id="edge-file" name="attachment_file">
+        </div>
+
+      </form>
+
+      <!-- ORPHAN CONTROL OUTSIDE ANY <form> TAG -->
+      <div class="form-group" style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border);">
+        <label for="orphan-input">Controle Órfão (Fora de qualquer tag form)</label>
+        <input type="text" id="orphan-input" name="orphan_field" placeholder="Input sem elemento <form> pai">
+      </div>
+    </section>
+
+    <!-- PANEL 4: VERIFICATION CONSOLE & EVENT LOGGER -->
+    <section class="card full-width" id="panel-console">
+      <h2>4. Verification Console & Event Logger (window.__FORMGEN_FIXTURE__)</h2>
+      <div class="console-actions">
+        <button id="btn-reset-logs">Limpar Logs</button>
+        <button id="btn-validate-enterprise" class="btn-secondary">Checar Validade Form Enterprise</button>
+        <button id="btn-print-schema" class="btn-secondary">Testar Extração de Schema</button>
+        <span id="event-counter-badge" class="badge">0 eventos capturados</span>
+      </div>
+
+      <div class="table-container">
+        <table id="table-events">
+          <thead>
+            <tr>
+              <th style="width: 100px;">Timestamp</th>
+              <th style="width: 140px;">Target ID</th>
+              <th style="width: 140px;">Target Name</th>
+              <th style="width: 90px;">Tipo</th>
+              <th>Valor / Conteúdo</th>
+              <th style="width: 80px;">Checked</th>
+              <th style="width: 80px;">Bubbles</th>
+              <th style="width: 80px;">Composed</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-events">
+            <!-- Dynamic log rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- TEST HARNESS JAVASCRIPT -->
+  <script>
+    (function() {
+      // 1. Reactive State Object
+      window.__REACTIVE_STATE__ = {
+        reactiveName: '',
+        reactiveEmail: '',
+        reactiveRole: '',
+        reactiveTerms: false,
+        reactiveNotes: ''
+      };
+
+      function updateReactiveMirror() {
+        const pre = document.getElementById('reactive-state-output');
+        if (pre) {
+          pre.textContent = JSON.stringify(window.__REACTIVE_STATE__, null, 2);
+        }
+      }
+
+      // Emulate React 16-19 _valueTracker trap
+      function attachValueTracker(element) {
+        if (!element) return;
+        element._valueTracker = {
+          getValue: function() { return element.value; },
+          setValue: function(v) { this._lastValue = v; },
+          _lastValue: element.value
+        };
+      }
+
+      // Setup reactive form listeners
+      const reactiveInputs = [
+        { id: 'reactive-name', key: 'reactiveName', isCheckbox: false },
+        { id: 'reactive-email', key: 'reactiveEmail', isCheckbox: false },
+        { id: 'reactive-role', key: 'reactiveRole', isCheckbox: false },
+        { id: 'reactive-terms', key: 'reactiveTerms', isCheckbox: true },
+        { id: 'reactive-notes', key: 'reactiveNotes', isCheckbox: false }
+      ];
+
+      reactiveInputs.forEach(item => {
+        const el = document.getElementById(item.id);
+        if (!el) return;
+        if (!item.isCheckbox) attachValueTracker(el);
+
+        const updateState = () => {
+          window.__REACTIVE_STATE__[item.key] = item.isCheckbox ? el.checked : el.value;
+          updateReactiveMirror();
+        };
+
+        el.addEventListener('input', updateState);
+        el.addEventListener('change', updateState);
+      });
+
+      updateReactiveMirror();
+
+      // 2. Global Test Harness Object: window.__FORMGEN_FIXTURE__
+      window.__FORMGEN_FIXTURE__ = {
+        version: "1.0.0",
+        events: [],
+
+        getCapturedEvents: function() {
+          return this.events.slice();
+        },
+
+        getEventsByTarget: function(targetId) {
+          return this.events.filter(e => e.targetId === targetId);
+        },
+
+        getEventsByType: function(eventType) {
+          return this.events.filter(e => e.type === eventType);
+        },
+
+        getReactiveState: function() {
+          return JSON.parse(JSON.stringify(window.__REACTIVE_STATE__ || {}));
+        },
+
+        isFormValid: function(formId) {
+          const el = document.getElementById(formId);
+          return el ? el.checkValidity() : false;
+        },
+
+        getFormValues: function(formId) {
+          const form = document.getElementById(formId);
+          if (!form) return {};
+          const formData = new FormData(form);
+          const result = {};
+          for (const [k, v] of formData.entries()) {
+            if (result[k]) {
+              if (!Array.isArray(result[k])) result[k] = [result[k]];
+              result[k].push(v);
+            } else {
+              result[k] = v;
+            }
+          }
+          return result;
+        },
+
+        resetLogs: function() {
+          this.events = [];
+          const tbody = document.getElementById('tbody-events');
+          if (tbody) tbody.innerHTML = '';
+          const badge = document.getElementById('event-counter-badge');
+          if (badge) badge.textContent = '0 eventos capturados';
+        },
+
+        logEvent: function(evt) {
+          const target = evt.target;
+          if (!target || target.nodeType !== Node.ELEMENT_NODE) return;
+
+          const entry = {
+            timestamp: Number(performance.now().toFixed(2)),
+            targetId: target.id || '',
+            targetName: target.name || '',
+            tagName: target.tagName.toLowerCase(),
+            type: evt.type,
+            value: target.value !== undefined ? target.value : null,
+            checked: target.checked !== undefined ? target.checked : null,
+            bubbles: evt.bubbles,
+            composed: evt.composed,
+            isTrusted: evt.isTrusted
+          };
+
+          this.events.push(entry);
+
+          // Render into UI table
+          const tbody = document.getElementById('tbody-events');
+          if (tbody) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${entry.timestamp}ms</td>
+              <td><code>${entry.targetId || '-'}</code></td>
+              <td><code>${entry.targetName || '-'}</code></td>
+              <td><span class="badge badge-${entry.type}">${entry.type}</span></td>
+              <td>${String(entry.value).substring(0, 30)}</td>
+              <td>${entry.checked !== null ? entry.checked : '-'}</td>
+              <td>${entry.bubbles}</td>
+              <td>${entry.composed}</td>
+            `;
+            tbody.prepend(tr);
+            if (tbody.children.length > 200) {
+              tbody.removeChild(tbody.lastChild);
+            }
+          }
+
+          const badge = document.getElementById('event-counter-badge');
+          if (badge) badge.textContent = `${this.events.length} eventos capturados`;
+        }
+      };
+
+      // 3. Attach Global Event Listeners to capture bubbling & composed events
+      const trackedEvents = ['focus', 'input', 'change', 'blur'];
+      trackedEvents.forEach(eventType => {
+        document.addEventListener(eventType, function(e) {
+          // Filter only form control elements
+          const tag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
+          if (['input', 'select', 'textarea'].includes(tag)) {
+            window.__FORMGEN_FIXTURE__.logEvent(e);
+          }
+        }, true); // Use capture phase so we never miss non-bubbling focus/blur
+      });
+
+      // 4. Bind Console UI Buttons
+      document.getElementById('btn-reset-logs').addEventListener('click', function() {
+        window.__FORMGEN_FIXTURE__.resetLogs();
+      });
+
+      document.getElementById('btn-validate-enterprise').addEventListener('click', function() {
+        const isValid = window.__FORMGEN_FIXTURE__.isFormValid('form-enterprise');
+        alert(`Form Enterprise Validity: ${isValid}`);
+      });
+
+      document.getElementById('btn-submit-enterprise').addEventListener('click', function(e) {
+        e.preventDefault();
+        const valid = window.__FORMGEN_FIXTURE__.isFormValid('form-enterprise');
+        console.log('[Test Fixture] Enterprise Form Submitted. Validity:', valid);
+      });
+
+    })();
+  </script>
+</body>
+</html>

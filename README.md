@@ -205,7 +205,7 @@ flowchart TD
 
 | Provedor | Endpoint Padrão | Modelo Padrão | Autenticação | Destaques |
 | :--- | :--- | :--- | :--- | :--- |
-| **Google Gemini** | `https://generativelanguage.googleapis.com` | `gemini-2.5-flash` | Chave de API (`x-goog-api-key`) | Modelos Gemini 2.5 e 3.8 com alta inteligência e suporte nativo a JSON mime-type. |
+| **Google Gemini** | `https://generativelanguage.googleapis.com` | `gemini-3.5-flash-lite` | Chave de API (`x-goog-api-key`) | Série Gemini 3: `gemini-3.5-flash-lite` (padrão ultra-rápido e econômico), `gemini-3.8-flash` e `gemini-3.5-flash` com suporte nativo a JSON. |
 | **OpenAI** | `https://api.openai.com/v1` | `gpt-4o-mini` | Token Bearer | Modelos GPT e linha reasoning (o4-mini, o3-mini) com `response_format: { type: "json_object" }`. |
 | **Ollama** | `http://localhost:11434` | `llama3.3` | Nenhuma | Execução local com Llama 3.3, DeepSeek R1 e Qwen 2.5 via `/api/chat`. |
 | **Custom / Groq / DeepSeek** | `https://api.groq.com/openai/v1` | `llama-3.3-70b-versatile` | Chave de API | Inferência de altíssima velocidade compatível com Groq, DeepSeek, Together AI e vLLM. |

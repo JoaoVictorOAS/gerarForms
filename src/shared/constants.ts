@@ -27,7 +27,7 @@ export const DEFAULT_ENDPOINTS: Readonly<Record<ProviderType, string>> = Object.
  * Default AI models optimized for structured JSON and low latency.
  */
 export const DEFAULT_MODELS: Readonly<Record<ProviderType, string>> = Object.freeze({
-  gemini: 'gemini-2.5-flash',
+  gemini: 'gemini-3.5-flash-lite',
   openai: 'gpt-4o-mini',
   ollama: 'llama3.3',
   custom: 'llama-3.3-70b-versatile',
@@ -49,11 +49,11 @@ export interface ProviderMetadata {
 export const PROVIDER_PRESETS: Readonly<Record<ProviderType, ProviderMetadata>> = Object.freeze({
   gemini: {
     label: 'Google Gemini',
-    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.8-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'],
-    defaultModel: 'gemini-2.5-flash',
+    models: ['gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-2.5-flash'],
+    defaultModel: 'gemini-3.5-flash-lite',
     defaultBaseUrl: 'https://generativelanguage.googleapis.com',
     requiresApiKey: true,
-    description: 'Modelos Gemini de última geração do Google com raciocínio avançado e suporte nativo a JSON.',
+    description: 'Série Gemini 3 do Google: gemini-3.5-flash-lite para velocidade e economia máxima com suporte a JSON.',
     docsUrl: 'https://ai.google.dev/',
   },
   openai: {

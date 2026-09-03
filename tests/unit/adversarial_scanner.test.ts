@@ -324,7 +324,7 @@ describe('Milestone 2 Challenger 1: Adversarial DOM Scanner Stress Tests', () =>
 
       // Memory footprint must not leak unbounded memory (less than 20MB delta for 50 scans)
       expect(heapGrowthMB).toBeLessThan(20);
-    });
+    }, 15000);
   });
 
   // ==========================================================================

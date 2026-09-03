@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FormGen</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-area">
+        <img src="icons/icon-48.png" alt="FormGen" class="logo" />
+        <div>
+          <h1 class="title">FormGen</h1>
+          <p class="subtitle">Auto-preenchimento Inteligente</p>
+        </div>
+      </div>
+      <button id="btn-settings" class="icon-btn" title="Configurações de IA">
+        ⚙️
+      </button>
+    </header>
+
+    <!-- Feedback Message Area -->
+    <div id="status-message" class="status-box hidden"></div>
+
+    <!-- Active Form Info -->
+    <div id="form-info" class="form-info-box">
+      <span id="form-status-indicator" class="status-indicator"></span>
+      <span id="form-status-text">Detectando formulário na página...</span>
+    </div>
+
+    <!-- Main Actions -->
+    <main class="actions-container">
+      <!-- Inserir Registro (Dinâmico) -->
+      <button id="btn-insert-record" class="btn btn-primary btn-large" disabled>
+        <span class="btn-icon">⚡</span>
+        <span id="insert-record-text">Inserir registro</span>
+      </button>
+
+      <!-- Divisor -->
+      <div class="divider">
+        <span>ou gerar novos dados</span>
+      </div>
+
+      <!-- Gerar Registro Único -->
+      <button id="btn-generate-single" class="btn btn-outline">
+        <span class="btn-icon">📝</span>
+        <span>Gerar registro único</span>
+      </button>
+
+      <!-- Gerar Vários Registros (10 e 100) -->
+      <div class="batch-section">
+        <span class="section-label">Gerar vários registros</span>
+        <div class="batch-buttons">
+          <button id="btn-generate-10" class="btn btn-secondary">
+            <span class="badge">10</span>
+            <span>Registros</span>
+          </button>
+          <button id="btn-generate-100" class="btn btn-secondary">
+            <span class="badge">100</span>
+            <span>Registros</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Fila Ativa & Progresso (Aparece quando há registros restantes) -->
+    <section id="queue-section" class="queue-section hidden">
+      <div class="queue-header">
+        <span class="queue-title">Fila no Navegador</span>
+        <button id="btn-clear-queue" class="btn-link" title="Descartar registros restantes">Descartar</button>
+      </div>
+      <div class="progress-bar-container">
+        <div id="queue-progress-bar" class="progress-bar" style="width: 0%;"></div>
+      </div>
+      <div class="queue-meta">
+        <span id="queue-count-text">0 de 0 registros</span>
+        <span id="queue-next-text">Próximo: #2</span>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span id="provider-badge" class="provider-badge">Carregando IA...</span>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

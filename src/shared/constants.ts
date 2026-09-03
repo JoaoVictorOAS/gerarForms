@@ -27,10 +27,10 @@ export const DEFAULT_ENDPOINTS: Readonly<Record<ProviderType, string>> = Object.
  * Default AI models optimized for structured JSON and low latency.
  */
 export const DEFAULT_MODELS: Readonly<Record<ProviderType, string>> = Object.freeze({
-  gemini: 'gemini-1.5-flash',
+  gemini: 'gemini-2.5-flash',
   openai: 'gpt-4o-mini',
-  ollama: 'llama3',
-  custom: 'llama-3.1-8b-instant',
+  ollama: 'llama3.3',
+  custom: 'llama-3.3-70b-versatile',
 });
 
 /**
@@ -49,38 +49,38 @@ export interface ProviderMetadata {
 export const PROVIDER_PRESETS: Readonly<Record<ProviderType, ProviderMetadata>> = Object.freeze({
   gemini: {
     label: 'Google Gemini',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'],
-    defaultModel: 'gemini-1.5-flash',
+    models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-3.8-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'],
+    defaultModel: 'gemini-2.5-flash',
     defaultBaseUrl: 'https://generativelanguage.googleapis.com',
     requiresApiKey: true,
-    description: 'API oficial do Google com alta velocidade e suporte nativo a JSON mime-type.',
+    description: 'Modelos Gemini de última geração do Google com raciocínio avançado e suporte nativo a JSON.',
     docsUrl: 'https://ai.google.dev/',
   },
   openai: {
     label: 'OpenAI',
-    models: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
+    models: ['gpt-4o-mini', 'gpt-4o', 'o4-mini', 'o3-mini', 'gpt-5.4'],
     defaultModel: 'gpt-4o-mini',
     defaultBaseUrl: 'https://api.openai.com/v1',
     requiresApiKey: true,
-    description: 'Modelos GPT da OpenAI com suporte a response_format: { type: "json_object" }.',
+    description: 'Modelos GPT e série reasoning (o4/o3) com suporte a modo JSON estrito.',
     docsUrl: 'https://platform.openai.com/docs/models',
   },
   ollama: {
     label: 'Ollama (Local)',
-    models: ['llama3', 'llama3.1', 'mistral', 'phi3', 'qwen2.5'],
-    defaultModel: 'llama3',
+    models: ['llama3.3', 'llama3.2', 'deepseek-r1', 'qwen2.5', 'mistral'],
+    defaultModel: 'llama3.3',
     defaultBaseUrl: 'http://localhost:11434',
     requiresApiKey: false,
-    description: 'Instância local do Ollama em http://localhost:11434 sem custo ou tráfego externo.',
+    description: 'Modelos locais via Ollama (Llama 3.3, DeepSeek R1, Qwen 2.5) sem custo ou tráfego externo.',
     docsUrl: 'https://ollama.ai/',
   },
   custom: {
-    label: 'Compatível com OpenAI / Groq',
-    models: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile', 'mixtral-8x7b-32768'],
-    defaultModel: 'llama-3.1-8b-instant',
+    label: 'Compatível com OpenAI / Groq / DeepSeek',
+    models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'deepseek-chat', 'deepseek-reasoner'],
+    defaultModel: 'llama-3.3-70b-versatile',
     defaultBaseUrl: 'https://api.groq.com/openai/v1',
     requiresApiKey: true,
-    description: 'Inferência ultra-rápida compatível com OpenAI (Groq, Together, DeepSeek, vLLM).',
+    description: 'Inferência ultra-rápida compatível com OpenAI (Groq, DeepSeek, Together, vLLM).',
     docsUrl: 'https://console.groq.com/docs/models',
   },
 });

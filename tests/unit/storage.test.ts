@@ -62,7 +62,7 @@ describe('src/shared/storage.ts - Storage Layer & Mocking System', () => {
       const settings = await getSettings();
       expect(settings).toEqual(DEFAULT_SETTINGS);
       expect(settings.activeProvider).toBe('gemini');
-      expect(settings.providers.gemini.model).toBe('gemini-1.5-flash');
+      expect(settings.providers.gemini.model).toBe('gemini-2.5-flash');
       expect(settings.providers.openai.model).toBe('gpt-4o-mini');
       expect(settings.providers.ollama.baseUrl).toBe('http://localhost:11434');
     });

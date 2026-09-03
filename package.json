@@ -1,0 +1,35 @@
+{
+  "name": "formgen",
+  "version": "1.0.0",
+  "description": "Extensão Chrome Manifest V3 para inspeção de formulários, geração de dados sintéticos com IA e preenchimento automático.",
+  "type": "module",
+  "author": "JoaoVictorOAS <playerthejvs@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoaoVictorOAS/gerarForms.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JoaoVictorOAS/gerarForms/issues"
+  },
+  "homepage": "https://github.com/JoaoVictorOAS/gerarForms#readme",
+  "scripts": {
+    "build": "node scripts/generate-icons.mjs && node build.js",
+    "dev": "node scripts/generate-icons.mjs && node build.js --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run tests/unit",
+    "test:watch": "vitest tests/unit",
+    "test:coverage": "vitest run tests/unit --coverage",
+    "pack": "npm run build && node scripts/pack.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.8",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^26.4.1",
+    "@vitest/coverage-v8": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.0"
+  }
+}

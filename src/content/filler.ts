@@ -214,7 +214,7 @@ export function injectElementValue(
     // Match by value first, then by visible text
     for (let i = 0; i < select.options.length; i++) {
       const opt = select.options[i];
-      if (opt.value.trim().toLowerCase() === targetStr) {
+      if (opt && opt.value.trim().toLowerCase() === targetStr) {
         matchedOptionIndex = i;
         break;
       }
@@ -223,7 +223,7 @@ export function injectElementValue(
     if (matchedOptionIndex === -1) {
       for (let i = 0; i < select.options.length; i++) {
         const opt = select.options[i];
-        if (opt.text.trim().toLowerCase() === targetStr) {
+        if (opt && opt.text.trim().toLowerCase() === targetStr) {
           matchedOptionIndex = i;
           break;
         }
@@ -234,7 +234,7 @@ export function injectElementValue(
       select.selectedIndex = matchedOptionIndex;
       dispatchInputEvents(select);
       return true;
-    } else if (select.options.length > 1) {
+    } else if (select.options.length > 1 && select.options[0]) {
       // Fallback: pick the first non-empty option if no exact match
       const fallbackIdx = select.options[0].value === '' ? 1 : 0;
       if (select.options[fallbackIdx]) {
